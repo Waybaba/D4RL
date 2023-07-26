@@ -7,6 +7,8 @@ import pickle
 import gzip
 import h5py
 import argparse
+import matplotlib.pyplot as plt
+import os
 
 
 def reset_data():
@@ -37,6 +39,29 @@ def npify(data):
 
         data[k] = np.array(data[k], dtype=dtype)
 
+def plot_and_save_waypoints(obs, target, maze_arr, file_name):
+    """
+    obs: list of observations # N,4
+    target: target position # 2
+    maze_arr: maze array # H,W, with 10 means emtpy and 11 means wall
+    """
+    waypoints = np.array(obs)
+    plt.figure()
+    plt.plot(waypoints[:, 0], waypoints[:, 1], 'ro-')
+
+    # Plot the start point
+    plt.scatter(waypoints[0, 0], waypoints[0, 1], color='blue', edgecolors='black', s=100) 
+
+    # Plot the target
+    plt.scatter(target[0], target[1], color='green', marker='*', edgecolors='black', s=200) 
+
+    plt.title('Waypoints')
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.grid()
+    plt.savefig(file_name)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--render', action='store_true', help='Render trajectories')
@@ -52,14 +77,20 @@ def main():
     controller = waypoint_controller.WaypointController(maze)
     env = maze_model.MazeEnv(maze)
 
+    # recurrently create ./debug/data/waypoints-<s_idx>.png, clear the content of ./debug/data first
+    if not os.path.exists('debug/data'): 
+        os.makedirs('debug/data')
+    else:
+        os.system('rm -rf debug/data/*')
+
     env.set_target()
     s = env.reset()
     act = env.action_space.sample()
     done = False
 
     data = reset_data()
-    ts = 0
-    for _ in range(args.num_samples):
+    ts = eps_start = 0
+    for s_idx in range(args.num_samples):
         position = s[0:2]
         velocity = s[2:4]
         act, done = controller.get_action(position, velocity, env._target)
@@ -80,12 +111,17 @@ def main():
         if done:
             env.set_target()
             done = False
+            
+            plot_and_save_waypoints(data["observations"][eps_start:], env._target, env.maze_arr, 'debug/data/waypoints-%d.png' % s_idx)
+            print('waypoints-%d.png saved' % s_idx)
+            eps_start = s_idx
             ts = 0
         else:
             s = ns
 
         if args.render:
-            env.render()
+            # env.render()
+            pass
 
     
     if args.noisy:
