@@ -22,7 +22,8 @@
 			"args": [
 				"--env_name",
 				"maze2d-large-v1",
-				"--render"
+				"--render",
+				// "--custom_target=null", // 2wayAv1
 			],
 			"justMyCode": true,
 			"cwd": "${workspaceFolder}",

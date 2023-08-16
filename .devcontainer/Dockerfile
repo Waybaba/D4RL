@@ -121,7 +121,7 @@ RUN pip install gym==0.18.0 einops typed-argument-parser scikit-video==1.1.11 sc
 RUN pip install 'mujoco-py<2.2,>=2.1' # avoid mujoco version change
 
 ### for d4rl change
-RUN pip uninstall d4rl -y
+# RUN pip uninstall d4rl -y
 
 ### end # comment the following when amlt: amlt need root user to build, but it will switch to a user called aiscuser when running
 USER $USERNAME 

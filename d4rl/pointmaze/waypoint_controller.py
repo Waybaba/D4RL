@@ -74,7 +74,17 @@ class WaypointController(object):
         s = start_idx
         waypoints = []
         for i in range(max_ts):
-            a = np.argmax(q_values[s])
+            def softmax(x, temp):
+                x -= np.max(x)  # For numerical stability
+                sm = (np.exp(x / temp) / np.float64(np.sum(np.exp(x / temp))))
+                return sm
+            # temp = 10. if i < 0.1 * max_ts else 0.1
+            temp = None
+            if temp is None: 
+                a = np.argmax(q_values[s])
+            else:
+                pol_probs = softmax(q_values[s], temp)
+                a = np.random.choice(self.env.num_actions, p=pol_probs)
             new_s, reward = self.env.step_stateless(s, a)
 
             waypoint = self.env.gs.idx_to_xy(new_s)
