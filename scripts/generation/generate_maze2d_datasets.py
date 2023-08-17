@@ -14,6 +14,8 @@ from tqdm import tqdm
 import os
 
 
+
+
 def reset_data():
     return {'observations': [],
             'actions': [],
@@ -131,10 +133,11 @@ def main():
     env = maze_model.MazeEnv(maze)
 
     # recurrently create ./debug/data/waypoints-<s_idx>.png, clear the content of ./debug/data first
-    if not os.path.exists('debug/data'): 
-        os.makedirs('debug/data')
+    if not os.path.exists('output/debug/data'): 
+        os.makedirs('output/debug/data')
     else:
-        os.system('rm -rf debug/data/*')
+        os.system('rm -rf output/debug/data/*')
+        os.system('rm -rf output/debug/images/*')
 
     env.set_target()
     
@@ -173,9 +176,12 @@ def main():
         ts += 1
         if done:
             done = False
-            if s_idx < 100000:
-                plot_and_save_waypoints(data["observations"][eps_start:], env._target, env.maze_arr, 'debug/data/waypoints-%d.png' % s_idx)
-                print('save to path: ./debug/data/waypoints-%d.png' % s_idx)
+            # if s_idx < 100000:
+            if False:
+                if not os.path.exists('output/images'): 
+                    os.makedirs('output/images')
+                plot_and_save_waypoints(data["observations"][eps_start:], env._target, env.maze_arr, './output/debug/images/waypoints-%d.png' % s_idx)
+                print('save to path: ./output/debug/images/waypoints-%d.png' % s_idx)
             if args.custom_target is not None and np.random.rand() < args.custom_target_ratio:
                 # env.set_state(self.CUSTOM_TARGET[cfg.trainer.custom_target]["state"])
                 env.set_target(CUSTOM_TARGET[args.custom_target]["target"])
@@ -197,10 +203,12 @@ def main():
 
     
     if args.noisy:
-        fname = '%s-noisy.hdf5' % args.env_name
+        fname = 'output/%s-noisy.hdf5' % args.env_name
     else:
-        fname = '%s.hdf5' % args.env_name
+        fname = 'output/%s.hdf5' % args.env_name
     dataset = h5py.File(fname, 'w')
+    os.system('rm -f output/latest.hdf5')
+    os.system('ln -s %s %s' % (fname, 'output/latest.hdf5'))
     npify(data)
     for k in data:
         dataset.create_dataset(k, data=data[k], compression='gzip')

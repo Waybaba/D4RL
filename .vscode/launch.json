@@ -22,10 +22,12 @@
 			"args": [
 				"--env_name",
 				"maze2d-large-v1",
+				// "maze2d-open-v0",
 				"--render",
 				// "--custom_target=null", // 2wayAv1
+				"--num_samples", "10000",
 			],
-			"justMyCode": true,
+			"justMyCode": false,
 			"cwd": "${workspaceFolder}",
 			"env": {
 				"PYTHONPATH": "${workspaceFolder}"
