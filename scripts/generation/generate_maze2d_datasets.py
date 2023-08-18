@@ -176,8 +176,8 @@ def main():
         ts += 1
         if done:
             done = False
-            # if s_idx < 100000:
-            if False:
+            if s_idx < 100000:
+            # if False:
                 if not os.path.exists('output/images'): 
                     os.makedirs('output/images')
                 plot_and_save_waypoints(data["observations"][eps_start:], env._target, env.maze_arr, './output/debug/images/waypoints-%d.png' % s_idx)
@@ -208,7 +208,7 @@ def main():
         fname = 'output/%s.hdf5' % args.env_name
     dataset = h5py.File(fname, 'w')
     os.system('rm -f output/latest.hdf5')
-    os.system('ln -s %s %s' % (fname, 'output/latest.hdf5'))
+    os.system('ln -s %s %s' % (fname.split("/")[-1], 'output/latest.hdf5'))
     npify(data)
     for k in data:
         dataset.create_dataset(k, data=data[k], compression='gzip')

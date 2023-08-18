@@ -60,60 +60,7 @@ class WaypointController(object):
     def gridify_state(self, state):
         return (int(round(state[0])), int(round(state[1])))
 
-    def _new_target(self, start, target):
-        #print('Computing waypoints from %s to %s' % (start, target))
-        start = self.gridify_state(start)
-        start_idx = self.env.gs.xy_to_idx(start)
-        target = self.gridify_state(target)
-        target_idx = self.env.gs.xy_to_idx(target)
-        self._waypoint_idx = 0
-
-        self.env.gs[target] = grid_spec.REWARD
-        q_values = q_iteration.q_iteration(env=self.env, num_itrs=50, discount=0.99)
-        # compute waypoints by performing a rollout in the grid
-        max_ts = 100
-        s = start_idx
-        waypoints = []
-        for i in range(max_ts):
-            def softmax(x, temp):
-                x -= np.max(x)  # For numerical stability
-                sm = (np.exp(x / temp) / np.float64(np.sum(np.exp(x / temp))))
-                return sm
-            # temp = 10. if i < 0.1 * max_ts else 0.1
-            temp = None
-            if temp is None: 
-                a = np.argmax(q_values[s])
-            else:
-                pol_probs = softmax(q_values[s], temp)
-                a = np.random.choice(self.env.num_actions, p=pol_probs)
-            new_s, reward = self.env.step_stateless(s, a)
-
-            waypoint = self.env.gs.idx_to_xy(new_s)
-            if new_s != target_idx:
-                waypoint = waypoint - np.random.uniform(size=(2,))*0.2
-            waypoints.append(waypoint)
-            s = new_s
-            if new_s == target_idx:
-                break
-        self.env.gs[target] = grid_spec.EMPTY
-        self._waypoints = waypoints
-        self._waypoint_prev_loc = start
-        self._target = target
-
-
     # def _new_target(self, start, target):
-    #     ACT_NOOP = 0
-    #     ACT_UP = 1
-    #     ACT_DOWN = 2
-    #     ACT_LEFT = 3
-    #     ACT_RIGHT = 4
-    #     ACT_DICT = {
-    #         ACT_NOOP: [0,0],
-    #         ACT_UP: [0, -1],
-    #         ACT_LEFT: [-1, 0],
-    #         ACT_RIGHT: [+1, 0],
-    #         ACT_DOWN: [0, +1]
-    #     }
     #     #print('Computing waypoints from %s to %s' % (start, target))
     #     start = self.gridify_state(start)
     #     start_idx = self.env.gs.xy_to_idx(start)
@@ -127,7 +74,6 @@ class WaypointController(object):
     #     max_ts = 100
     #     s = start_idx
     #     waypoints = []
-    #     first_direction = random.choice(['x', 'y'])
     #     for i in range(max_ts):
     #         def softmax(x, temp):
     #             x -= np.max(x)  # For numerical stability
@@ -136,24 +82,7 @@ class WaypointController(object):
     #         # temp = 10. if i < 0.1 * max_ts else 0.1
     #         temp = None
     #         if temp is None: 
-    #             cur_xy = self.env.gs.idx_to_xy(s)
-    #             target_xy = target
-    #             delta_x = target_xy[0] - cur_xy[0]
-    #             delta_y = target_xy[1] - cur_xy[1]
-
-    #             a = None
-    #             if first_direction == 'x' and delta_x != 0:
-    #                 a = ACT_RIGHT if delta_x > 0 else ACT_LEFT
-    #             elif first_direction == 'y' and delta_y != 0:
-    #                 a = ACT_DOWN if delta_y > 0 else ACT_UP
-                
-    #             if a is None:
-    #                 if delta_y != 0:
-    #                     a = ACT_DOWN if delta_y > 0 else ACT_UP
-    #                 elif delta_x != 0:
-    #                     a = ACT_RIGHT if delta_x > 0 else ACT_LEFT
-    #             else:
-    #                 a = np.argmax(q_values[s])
+    #             a = np.argmax(q_values[s])
     #         else:
     #             pol_probs = softmax(q_values[s], temp)
     #             a = np.random.choice(self.env.num_actions, p=pol_probs)
@@ -170,6 +99,78 @@ class WaypointController(object):
     #     self._waypoints = waypoints
     #     self._waypoint_prev_loc = start
     #     self._target = target
+
+
+    def _new_target(self, start, target):
+        ACT_NOOP = 0
+        ACT_UP = 1
+        ACT_DOWN = 2
+        ACT_LEFT = 3
+        ACT_RIGHT = 4
+        ACT_DICT = {
+            ACT_NOOP: [0,0],
+            ACT_UP: [0, -1],
+            ACT_LEFT: [-1, 0],
+            ACT_RIGHT: [+1, 0],
+            ACT_DOWN: [0, +1]
+        }
+        #print('Computing waypoints from %s to %s' % (start, target))
+        start = self.gridify_state(start)
+        start_idx = self.env.gs.xy_to_idx(start)
+        target = self.gridify_state(target)
+        target_idx = self.env.gs.xy_to_idx(target)
+        self._waypoint_idx = 0
+
+        self.env.gs[target] = grid_spec.REWARD
+        q_values = q_iteration.q_iteration(env=self.env, num_itrs=50, discount=0.99)
+        # compute waypoints by performing a rollout in the grid
+        max_ts = 100
+        s = start_idx
+        waypoints = []
+        first_direction = random.choice(['x', 'y'])
+        for i in range(max_ts):
+            def softmax(x, temp):
+                x -= np.max(x)  # For numerical stability
+                sm = (np.exp(x / temp) / np.float64(np.sum(np.exp(x / temp))))
+                return sm
+            # temp = 10. if i < 0.1 * max_ts else 0.1
+            temp = None
+            if temp is None: 
+                a = np.argmax(q_values[s])
+                # cur_xy = self.env.gs.idx_to_xy(s)
+                # target_xy = target
+                # delta_x = target_xy[0] - cur_xy[0]
+                # delta_y = target_xy[1] - cur_xy[1]
+
+                # a = None
+                # if first_direction == 'x' and delta_x != 0:
+                #     a = ACT_RIGHT if delta_x > 0 else ACT_LEFT
+                # elif first_direction == 'y' and delta_y != 0:
+                #     a = ACT_DOWN if delta_y > 0 else ACT_UP
+                
+                # if a is None:
+                #     if delta_y != 0:
+                #         a = ACT_DOWN if delta_y > 0 else ACT_UP
+                #     elif delta_x != 0:
+                #         a = ACT_RIGHT if delta_x > 0 else ACT_LEFT
+                # else:
+                #     a = np.argmax(q_values[s])
+            else:
+                pol_probs = softmax(q_values[s], temp)
+                a = np.random.choice(self.env.num_actions, p=pol_probs)
+            new_s, reward = self.env.step_stateless(s, a)
+
+            waypoint = self.env.gs.idx_to_xy(new_s)
+            if new_s != target_idx:
+                waypoint = waypoint - np.random.uniform(size=(2,))*0.2
+            waypoints.append(waypoint)
+            s = new_s
+            if new_s == target_idx:
+                break
+        self.env.gs[target] = grid_spec.EMPTY
+        self._waypoints = waypoints
+        self._waypoint_prev_loc = start
+        self._target = target
 
 if __name__ == "__main__":
     print(q_iteration.__file__)
