@@ -2,6 +2,7 @@ import gym
 import logging
 import pyrootutils
 root = pyrootutils.setup_root(__file__, dotenv=True, pythonpath=True, indicator=[".gitignore"])
+import waybaba.set_customenv
 from d4rl.pointmaze import waypoint_controller
 from d4rl.pointmaze import maze_model
 import numpy as np
@@ -202,17 +203,23 @@ def main():
             pass
 
     
+    # folder $UDATADIR/models/diffuser/d4rl_dataset
+    fdname = os.path.join(os.environ['UDATADIR'], 'models/diffuser/d4rl_dataset')
+    if not os.path.exists(fdname): os.makedirs(fdname)
+
     if args.noisy:
-        fname = 'output/%s-noisy.hdf5' % args.env_name
+        fname = os.path.join(fdname, '%s-%s-noisy.hdf5' % (args.env_name, args.num_samples))
     else:
-        fname = 'output/%s.hdf5' % args.env_name
+        fname = os.path.join(fdname, '%s-%s.hdf5' % (args.env_name, args.num_samples))
     dataset = h5py.File(fname, 'w')
-    os.system('rm -f output/latest.hdf5')
-    os.system('ln -s %s %s' % (fname.split("/")[-1], 'output/latest.hdf5'))
+
     npify(data)
     for k in data:
         dataset.create_dataset(k, data=data[k], compression='gzip')
 
+    # make a alias for the latest one
+    os.system('rm -rf %s' % os.path.join(fdname, 'latest.hdf5'))
+    os.system('ln -s %s %s' % (fname, os.path.join(fdname, 'latest.hdf5')))
 
 if __name__ == "__main__":
     main()

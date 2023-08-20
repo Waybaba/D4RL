@@ -136,25 +136,20 @@ class WaypointController(object):
             # temp = 10. if i < 0.1 * max_ts else 0.1
             temp = None
             if temp is None: 
-                a = np.argmax(q_values[s])
-                # cur_xy = self.env.gs.idx_to_xy(s)
-                # target_xy = target
-                # delta_x = target_xy[0] - cur_xy[0]
-                # delta_y = target_xy[1] - cur_xy[1]
+                # a = np.argmax(q_values[s])
+                cur_xy = self.env.gs.idx_to_xy(s)
+                target_xy = target
+                delta_x = target_xy[0] - cur_xy[0]
+                delta_y = target_xy[1] - cur_xy[1]
 
-                # a = None
-                # if first_direction == 'x' and delta_x != 0:
-                #     a = ACT_RIGHT if delta_x > 0 else ACT_LEFT
-                # elif first_direction == 'y' and delta_y != 0:
-                #     a = ACT_DOWN if delta_y > 0 else ACT_UP
+                a = None
+                if first_direction == 'x' and delta_x != 0:
+                    a = ACT_RIGHT if delta_x > 0 else ACT_LEFT
+                elif first_direction == 'y' and delta_y != 0:
+                    a = ACT_DOWN if delta_y > 0 else ACT_UP
                 
-                # if a is None:
-                #     if delta_y != 0:
-                #         a = ACT_DOWN if delta_y > 0 else ACT_UP
-                #     elif delta_x != 0:
-                #         a = ACT_RIGHT if delta_x > 0 else ACT_LEFT
-                # else:
-                #     a = np.argmax(q_values[s])
+                if a is None:
+                    a = np.argmax(q_values[s])
             else:
                 pol_probs = softmax(q_values[s], temp)
                 a = np.random.choice(self.env.num_actions, p=pol_probs)

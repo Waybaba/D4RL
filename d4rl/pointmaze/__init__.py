@@ -1,6 +1,29 @@
 from .maze_model import MazeEnv, OPEN, U_MAZE, MEDIUM_MAZE, LARGE_MAZE, U_MAZE_EVAL, MEDIUM_MAZE_EVAL, LARGE_MAZE_EVAL
 from gym.envs.registration import register
 
+# OPEN_LARGE = \
+#         "############\\"+\
+#         "#OOOOOOOOOO#\\"+\
+#         "#OOOOOOOOOO#\\"+\
+#         "#OOOOOOOOOO#\\"+\
+#         "#OOOOOOOOOO#\\"+\
+#         "#OOOOOOOOOO#\\"+\
+#         "#OOOOOOOOOO#\\"+\
+#         "#OO#OOO#OGO#\\"+\
+#         "############"
+# LARGE_MAZE = \
+#         "############\\"+\
+#         "#OOOO#OOOOO#\\"+\
+#         "#O##O#O#O#O#\\"+\
+#         "#OOOOOO#OOO#\\"+\
+#         "#O####O###O#\\"+\
+#         "#OO#O#OOOOO#\\"+\
+#         "##O#O#O#O###\\"+\
+#         "#OO#OOO#OGO#\\"+\
+#         "############"
+
+# LARGE_MAZE = OPEN_LARGE
+
 register(
     id='maze2d-open-v0',
     entry_point='d4rl.pointmaze:MazeEnv',

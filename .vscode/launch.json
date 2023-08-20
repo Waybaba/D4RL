@@ -21,8 +21,8 @@
 			"console": "integratedTerminal",
 			"args": [
 				"--env_name",
-				"maze2d-large-v1",
-				// "maze2d-open-v0",
+				"maze2d-openlarge-v0",
+				// "maze2d-open-large",
 				"--render",
 				// "--custom_target=null", // 2wayAv1
 				"--num_samples", "10000",

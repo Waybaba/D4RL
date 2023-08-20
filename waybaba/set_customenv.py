@@ -1,4 +1,3 @@
-from d4rl.pointmaze.gridcraft.maze_model import MazeEnv, OPEN, U_MAZE, MEDIUM_MAZE, LARGE_MAZE, U_MAZE_EVAL, MEDIUM_MAZE_EVAL, LARGE_MAZE_EVAL
 from gym.envs.registration import register
 
 
@@ -12,11 +11,21 @@ OPEN_LARGE = \
         "#OOOOOOOOOO#\\"+\
         "#OOOOOOOOOO#\\"+\
         "############"
+# LARGE_MAZE = \
+#         "############\\"+\
+#         "#OOOO#OOOOO#\\"+\
+#         "#O##O#O#O#O#\\"+\
+#         "#OOOOOO#OOO#\\"+\
+#         "#O####O###O#\\"+\
+#         "#OO#O#OOOOO#\\"+\
+#         "##O#O#O#O###\\"+\
+#         "#OO#OOO#OGO#\\"+\
+#         "############"
 
 register(
-    id='maze2d-open-large',
+    id='maze2d-openlarge-v0',
     entry_point='d4rl.pointmaze:MazeEnv',
-    max_episode_steps=50,
+    max_episode_steps=800,
     kwargs={
         'maze_spec':OPEN_LARGE,
         'reward_type':'sparse',
