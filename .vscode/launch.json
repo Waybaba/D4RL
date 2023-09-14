@@ -21,10 +21,11 @@
 			"console": "integratedTerminal",
 			"args": [
 				"--env_name",
-				"maze2d-openlarge-v0",
-				// "maze2d-open-large",
+				// "maze2d-openlarge-v0",
+				// "maze2d-open-v0",
+				"maze2d-open55-v0",
 				"--render",
-				// "--custom_target=null", // 2wayAv1
+				// "--custom_target=sets%4edgex", // 2wayAv1, onlytwo, sets%4edge
 				"--num_samples", "10000",
 			],
 			"justMyCode": false,

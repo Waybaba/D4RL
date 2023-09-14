@@ -24,10 +24,11 @@ from gym.envs.registration import register
 
 # LARGE_MAZE = OPEN_LARGE
 
+
 register(
     id='maze2d-open-v0',
     entry_point='d4rl.pointmaze:MazeEnv',
-    max_episode_steps=150,
+    max_episode_steps=10000, # ! the origin value is 150
     kwargs={
         'maze_spec':OPEN,
         'reward_type':'sparse',
@@ -37,6 +38,7 @@ register(
         'dataset_url':'http://rail.eecs.berkeley.edu/datasets/offline_rl/maze2d/maze2d-open-sparse.hdf5'
     }
 )
+
 
 register(
     id='maze2d-umaze-v0',

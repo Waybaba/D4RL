@@ -116,6 +116,28 @@ def main():
             "location": (1, 10.0),
             "target": np.array([5, 6]),
         },
+        "r2l": {
+            "location": (1.0, 2.0),
+            "target": np.array([5, 4]),
+        },
+        "l2r": {
+            "location": (5.0, 4.0),
+            "target": np.array([1.0, 2.0]),
+        },
+    }
+    TARGET_SET = {
+        "4edge": [
+            np.array([1.,3.]),
+            np.array([5.,3.]),
+            np.array([3.,1.]),
+            np.array([3.,5.]),
+        ],
+        "4edgex": [
+            np.array([1.,4.]),
+            np.array([2.,1.]),
+            np.array([5.,2.]),
+            np.array([4.,5.]),
+        ],
     }
     parser = argparse.ArgumentParser()
     parser.add_argument('--render', action='store_true', help='Render trajectories')
@@ -144,8 +166,35 @@ def main():
     
     if args.custom_target is not None:
         # env.set_state(self.CUSTOM_TARGET[cfg.trainer.custom_target]["state"])
-        env.set_target(CUSTOM_TARGET[args.custom_target]["target"])
-        s = env.reset_to_location(CUSTOM_TARGET[args.custom_target]["location"])
+        if args.custom_target == "onlytwo":
+            # if close to l2r, set target as r2l, else l2r
+            dis2l2r = np.linalg.norm(env.get_target() - CUSTOM_TARGET["l2r"]["location"])
+            dis2r2l = np.linalg.norm(env.get_target() - CUSTOM_TARGET["r2l"]["location"])
+            if dis2l2r < dis2r2l:
+                env.set_target(CUSTOM_TARGET["r2l"]["target"])
+            else:
+                env.set_target(CUSTOM_TARGET["l2r"]["target"])
+            s = env.reset()
+        elif args.custom_target.startswith("sets"):
+            """ sets%{set_name}
+            e.g. sets%4edge
+            each time, select new target from sets randomly (except the current one)
+            """
+            _, set_name = args.custom_target.split("%")
+            sets = TARGET_SET[set_name]
+            distances = [
+                np.linalg.norm(env.get_target() - sets[i])
+                for i in range(len(sets))
+            ]
+            idx_min = np.argmin(distances)
+            # random select from others
+            idx = np.random.choice([i for i in range(len(sets)) if i != idx_min])
+            env.set_target(sets[idx])
+            s = env.reset()
+        else: 
+            raise NotImplementedError
+            env.set_target(CUSTOM_TARGET[args.custom_target]["target"])
+            s = env.reset_to_location(CUSTOM_TARGET[args.custom_target]["location"])
         print("###")
         print(f"use custom target ### {args.custom_target} ###")
         print("state", env.state_vector())
@@ -177,20 +226,47 @@ def main():
         ts += 1
         if done:
             done = False
-            if s_idx < 100000:
+            if s_idx < 10000:
             # if False:
                 if not os.path.exists('output/images'): 
                     os.makedirs('output/images')
                 plot_and_save_waypoints(data["observations"][eps_start:], env._target, env.maze_arr, './output/debug/images/waypoints-%d.png' % s_idx)
                 print('save to path: ./output/debug/images/waypoints-%d.png' % s_idx)
             if args.custom_target is not None and np.random.rand() < args.custom_target_ratio:
-                # env.set_state(self.CUSTOM_TARGET[cfg.trainer.custom_target]["state"])
-                env.set_target(CUSTOM_TARGET[args.custom_target]["target"])
-                env.reset_to_location(CUSTOM_TARGET[args.custom_target]["location"])
-                print("###")
-                print(f"use custom target ### {args.custom_target} ###")
-                print("state", env.state_vector())
-                print("target", env._target)
+                if args.custom_target == "onlytwo":
+                    # if close to l2r, set target as r2l, else l2r
+                    dis2l2r = np.linalg.norm(env.get_target() - CUSTOM_TARGET["l2r"]["location"])
+                    dis2r2l = np.linalg.norm(env.get_target() - CUSTOM_TARGET["r2l"]["location"])
+                    if dis2l2r > dis2r2l:
+                        env.set_target(CUSTOM_TARGET["r2l"]["target"])
+                    else:
+                        env.set_target(CUSTOM_TARGET["l2r"]["target"])
+                elif args.custom_target.startswith("sets"):
+                    """ sets%{set_name}
+                    e.g. sets%4edge
+                    each time, select new target from sets randomly (except the current one)
+                    """
+                    _, set_name = args.custom_target.split("%")
+                    sets = TARGET_SET[set_name]
+                    distances = [
+                        np.linalg.norm(env.get_target() - sets[i])
+                        for i in range(len(sets))
+                    ]
+                    idx_min = np.argmin(distances)
+                    # random select from others
+                    idx = np.random.choice([i for i in range(len(sets)) if i != idx_min])
+                    env.set_target(sets[idx])
+                    # s = env.reset()
+                else:
+                    raise NotImplementedError
+                    # env.set_state(self.CUSTOM_TARGET[cfg.trainer.custom_target]["state"])
+                    env.set_target(CUSTOM_TARGET[args.custom_target]["target"])
+                    env.reset_to_location(CUSTOM_TARGET[args.custom_target]["location"])
+                    print("###")
+                    print(f"use custom target ### {args.custom_target} ###")
+                    print("state", env.state_vector())
+                    print("target", env._target)
+
             else:
                 env.set_target()
             eps_start = s_idx
@@ -208,9 +284,9 @@ def main():
     if not os.path.exists(fdname): os.makedirs(fdname)
 
     if args.noisy:
-        fname = os.path.join(fdname, '%s-%s-noisy.hdf5' % (args.env_name, args.num_samples))
+        fname = os.path.join(fdname, '%s-%s-noisy.hdf5' % (args.env_name, str(args.num_samples)+("" if args.custom_target is None else "-"+args.custom_target)))
     else:
-        fname = os.path.join(fdname, '%s-%s.hdf5' % (args.env_name, args.num_samples))
+        fname = os.path.join(fdname, '%s-%s.hdf5' % (args.env_name, str(args.num_samples)+("" if args.custom_target is None else "-"+args.custom_target)))
     dataset = h5py.File(fname, 'w')
 
     npify(data)
@@ -220,6 +296,7 @@ def main():
     # make a alias for the latest one
     os.system('rm -rf %s' % os.path.join(fdname, 'latest.hdf5'))
     os.system('ln -s %s %s' % (fname, os.path.join(fdname, 'latest.hdf5')))
+    print('save to path: %s' % fname)
 
 if __name__ == "__main__":
     main()
